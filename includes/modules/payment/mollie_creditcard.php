@@ -25,8 +25,8 @@ class mollie_creditcard extends mollie
     {
         parent::__construct();
 
-        $componentsKey = $this->_formatKey('COMPONENTS_STATUS');
-        $singleClickKey = $this->_formatKey('SINGLE_CLICK_STATUS');
+        $componentsKey = $this->_formatKey('COMPONENTS_STATUS_TITLE');
+        $singleClickKey = $this->_formatKey('SINGLE_CLICK_STATUS_TITLE');
         $useComponents = @constant($componentsKey);
         $useSingleClick = @constant($singleClickKey);
         if (empty($useComponents) && $this->_isInstalled()) {
@@ -52,7 +52,7 @@ class mollie_creditcard extends mollie
             return false;
         }
 
-        $configKey = $this->_formatKey('COMPONENTS_STATUS');
+        $configKey = $this->_formatKey('COMPONENTS_STATUS_TITLE');
         if (@constant($configKey) === 'true') {
             $selection['fields'] = [
                 [
