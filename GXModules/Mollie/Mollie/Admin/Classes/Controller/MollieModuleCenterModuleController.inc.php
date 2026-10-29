@@ -8,6 +8,7 @@ use Mollie\BusinessLogic\PaymentMethod\PaymentMethodService;
 use Mollie\BusinessLogic\VersionCheck\VersionCheckService;
 use Mollie\Gambio\Mappers\OrderStatusMapper;
 use Mollie\Gambio\Services\Business\ConfigurationService;
+use Mollie\Gambio\Update\v2_1_5\OrderStatusUpdate;
 use Mollie\Gambio\Utility\MollieModuleChecker;
 use Mollie\Gambio\Utility\PathProvider;
 use Mollie\Gambio\Utility\UrlProvider;
@@ -185,8 +186,9 @@ class MollieModuleCenterModuleController extends AbstractModuleCenterModuleContr
             $paymentMethods = $this->paymentService->getAllPaymentMethodConfigurations($websiteProfile->getId());
         }
 
+        // statuses created in this request are not in the configuration constants yet
+        $createdStatuses = (new OrderStatusUpdate())->addMissingStatuses();
         $statusMapping = new OrderStatusMapper();
-
 
         return [
             'methods'                 => $this->_formatPaymentMethod($paymentMethods),
@@ -194,7 +196,7 @@ class MollieModuleCenterModuleController extends AbstractModuleCenterModuleContr
             'notification_page_count' => $this->_getNumberOfNotificationPages(),
             'notification_url'        => UrlProvider::generateAdminUrl('admin.php', 'MollieNotification'),
             'order_statuses'          => $this->_formatOrderStatuses(),
-            'saved_statuses'          => array_map('intval', $statusMapping->getStatusMap()),
+            'saved_statuses'          => array_map('intval', array_merge($statusMapping->getStatusMap(), $createdStatuses)),
         ];
     }
 

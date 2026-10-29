@@ -40,6 +40,7 @@ $t_language_text_section_content_array = [
     'mollie_authorized'              => 'Authorized',
     'mollie_paid'                    => 'Paid',
     'mollie_refunded'                => 'Refunded',
+    'mollie_pending'                 => 'Pending',
     'mollie_none'                    => 'None',
     'mollie_cancel'                  => 'Cancel',
     'mollie_save_changes'            => 'Save changes',
@@ -125,6 +126,7 @@ $t_language_text_section_content_array = [
     'mollie_canceled_comment' => 'The customer has canceled the payment.',
     'mollie_expired_comment'  => 'The payment has expired on Mollie.',
     'mollie_failed_comment'   => 'The payment has failed and cannot be completed with selected payment method.',
+    'mollie_pending_comment'  => 'The payment is pending. The order is on hold until Mollie confirms the payment.',
 
     'mollie.payment.integration.event.notification.order_cancel_error.title'       => 'Shop change synchronization failed',
     'mollie.payment.integration.event.notification.order_cancel_error.description' => 'Failed to cancel Mollie order. Mollie api response {api_message}',

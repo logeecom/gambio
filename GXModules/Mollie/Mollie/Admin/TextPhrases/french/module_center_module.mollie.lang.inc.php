@@ -40,6 +40,7 @@ $t_language_text_section_content_array = [
     'mollie_authorized'              => 'Autorisé',
     'mollie_paid'                    => 'Payé',
     'mollie_refunded'                => 'Remboursé',
+    'mollie_pending'                 => 'En attente',
     'mollie_none'                    => 'Aucun',
     'mollie_cancel'                  => 'Annuler',
     'mollie_save_changes'            => 'Sauvegarder les changements',
@@ -124,6 +125,7 @@ $t_language_text_section_content_array = [
     'mollie_canceled_comment' => 'Le client a annulé le paiement.',
     'mollie_expired_comment'  => 'Le paiement a expiré sur Mollie.',
     'mollie_failed_comment'   => 'La paiement a échoué et ne peut pas être effectué avec le moyen de paiement sélectionné.',
+    'mollie_pending_comment'  => 'Le paiement est en attente. La commande est suspendue jusqu\'à ce que Mollie confirme le paiement.',
 
     'mollie.payment.integration.event.notification.order_cancel_error.title'       => 'La synchronisation du changement de magasin a échoué',
     'mollie.payment.integration.event.notification.order_cancel_error.description' => "Échec de l'annulation de la commande Mollie. Réponse de l'api Mollie {api_message}",

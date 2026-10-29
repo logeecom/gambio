@@ -9,6 +9,7 @@ use Mollie\Gambio\APIProcessor\ProcessorFactory;
 use Mollie\Gambio\Entity\Repository\GambioConfigRepository;
 use Mollie\Gambio\Services\Business\ConfigurationService;
 use Mollie\Gambio\Update\v2_0_8\PaymentMethodUpdate;
+use Mollie\Gambio\Update\v2_1_5\OrderStatusUpdate;
 use Mollie\Gambio\Utility\MollieModuleChecker;
 use Mollie\Gambio\Utility\PathProvider;
 use Mollie\Gambio\Utility\UrlProvider;
@@ -61,6 +62,7 @@ class mollie
 
         $updater = new PaymentMethodUpdate($this->code, $this->_isInstalled());
         $updater->addConfigFields();
+        (new OrderStatusUpdate())->addMissingStatuses();
 
         $this->title = @constant($this->_formatKey('TEXT_TITLE')) ?: $this->title;
         $this->titleLabel = $this->title;

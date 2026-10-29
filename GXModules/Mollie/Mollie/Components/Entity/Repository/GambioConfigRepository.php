@@ -43,6 +43,15 @@ class GambioConfigRepository extends GambioBaseRepository
     }
 
     /**
+     * @param string $key
+     * @param string $value
+     */
+    public function updateValue($key, $value)
+    {
+        $this->queryBuilder->where('`key`', $key, true)->update(self::TABLE_NAME, ['value' => $value]);
+    }
+
+    /**
      * @return string
      */
     protected function _getTableName()

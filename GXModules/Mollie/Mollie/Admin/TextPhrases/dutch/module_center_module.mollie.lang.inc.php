@@ -40,6 +40,7 @@ $t_language_text_section_content_array = [
     'mollie_authorized'              => 'Geautoriseerd',
     'mollie_paid'                    => 'Betaald',
     'mollie_refunded'                => 'Terugbetaald',
+    'mollie_pending'                 => 'In afwachting',
     'mollie_none'                    => 'Geen',
     'mollie_cancel'                  => 'Annuleren',
     'mollie_save_changes'            => 'Wijzigingen opslaan',
@@ -124,6 +125,7 @@ $t_language_text_section_content_array = [
     'mollie_canceled_comment' => 'De klant heeft de betaling geannuleerd.',
     'mollie_expired_comment'  => 'De betaling is op Mollie verlopen.',
     'mollie_failed_comment'   => 'De betaling is mislukt en kan niet worden voltooid met de geselecteerde betalingsmethode.',
+    'mollie_pending_comment'  => 'De betaling is in afwachting. De bestelling staat in de wacht totdat Mollie de betaling bevestigt.',
 
     'mollie.payment.integration.event.notification.order_cancel_error.title'       => 'Synchronisatie van winkelwijziging mislukt',
     'mollie.payment.integration.event.notification.order_cancel_error.description' => 'De bestelling van Mollie kan niet worden geannuleerd. Reactie Mollie API: {api_message}',

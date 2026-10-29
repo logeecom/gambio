@@ -50,7 +50,7 @@ class OrderStatusMapper
         $defaultStatuses = $configService->getDefaultOrderMapping();
 
         if ($statusMapping === null) {
-            return array_merge($map, $defaultStatuses);
+            return $this->addMissingStatuses($map, $defaultStatuses);
 
         }
 
@@ -62,6 +62,25 @@ class OrderStatusMapper
             } else {
                 $map[$key] = $defaultStatuses[$key];
             }
+        }
+
+        return $this->addMissingStatuses($map, $defaultStatuses);
+    }
+
+    /**
+     * Adds statuses introduced after the mapping was saved. If the pending status is not created yet,
+     * pending orders keep the created status.
+     *
+     * @param array $map
+     * @param array $defaultStatuses
+     *
+     * @return array
+     */
+    private function addMissingStatuses(array $map, array $defaultStatuses)
+    {
+        $map += $defaultStatuses;
+        if (isset($map['mollie_created'])) {
+            $map += ['mollie_pending' => $map['mollie_created']];
         }
 
         return $map;

@@ -40,6 +40,7 @@ $t_language_text_section_content_array = [
     'mollie_authorized'              => 'Genehmigt',
     'mollie_paid'                    => 'Bezahlt',
     'mollie_refunded'                => 'Zurückerstattet',
+    'mollie_pending'                 => 'Ausstehend',
     'mollie_none'                    => 'Keine',
     'mollie_cancel'                  => 'Storniert',
     'mollie_save_changes'            => 'Änderungen speichern',
@@ -123,6 +124,7 @@ $t_language_text_section_content_array = [
     'mollie_canceled_comment' => 'Der Kunde hat die Zahlung abgebrochen.',
     'mollie_expired_comment'  => 'Die Zahlung ist bei Mollie abgelaufen.',
     'mollie_failed_comment'   => 'Die Zahlung ist fehlgeschlagen und kann mit der gewählten Zahlungsmethode nicht abgeschlossen werden.',
+    'mollie_pending_comment'  => 'Die Zahlung ist ausstehend. Die Bestellung wird zurückgehalten, bis Mollie die Zahlung bestätigt.',
 
     'mollie.payment.integration.event.notification.order_cancel_error.title'       => 'Synchronisieren von Shop-Änderungen fehlgeschlagen',
     'mollie.payment.integration.event.notification.order_cancel_error.description' => 'Mollie-Bestellung konnte nicht storniert werden. Antwort Mollie-API {api_message}',

@@ -28,6 +28,29 @@ class GambioStatusRepository extends GambioBaseRepository
     }
 
     /**
+     * Creates order status with a name for every shop language, english name is used as a fallback
+     *
+     * @param array  $names Status names keyed by the language code
+     * @param string $color
+     *
+     * @return int
+     */
+    public function createStatus(array $names, $color)
+    {
+        $languageRepository = new GambioLanguageRepository();
+        $insertPayload = [];
+        foreach ($languageRepository->getLanguages() as $language) {
+            $insertPayload[] = [
+                'language_id' => (int)$language['id'],
+                'orders_status_name' => isset($names[$language['code']]) ? $names[$language['code']] : $names['en'],
+                'color' => $color,
+            ];
+        }
+
+        return $this->insertStatus($insertPayload);
+    }
+
+    /**
      * @return int
      */
     private function _getNextStatusID()
