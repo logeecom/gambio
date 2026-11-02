@@ -361,31 +361,6 @@ class PaymentMethodConfig extends Entity
      */
     public function setApiMethod($apiMethod)
     {
-//        $allowedMethods = array(self::API_METHOD_PAYMENT, self::API_METHOD_ORDERS);
-//        if (!in_array($apiMethod, $allowedMethods, true)) {
-//            throw new \InvalidArgumentException(
-//                sprintf(
-//                    'Invalid payment method api value %s. API method can be one of (%s) values',
-//                    $apiMethod,
-//                    implode(', ', $allowedMethods)
-//                )
-//            );
-//        }
-//
-//        if (
-//            $this->isApiMethodRestricted() &&
-//            $apiMethod !== static::$apiMethodRestrictions[$this->getMollieId()]
-//        ) {
-//            throw new \InvalidArgumentException(
-//                sprintf(
-//                    'Invalid payment method api value %s. Payment method %s supports only %s API method',
-//                    $apiMethod,
-//                    $this->getMollieId(),
-//                    static::$apiMethodRestrictions[$this->getMollieId()]
-//                )
-//            );
-//        }
-
         $this->apiMethod = $apiMethod;
     }
 

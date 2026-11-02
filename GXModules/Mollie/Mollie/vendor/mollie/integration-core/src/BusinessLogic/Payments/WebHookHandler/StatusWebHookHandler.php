@@ -3,6 +3,7 @@
 namespace Mollie\BusinessLogic\Payments\WebHookHandler;
 
 use Mollie\BusinessLogic\Integration\Interfaces\OrderTransitionService;
+use Mollie\BusinessLogic\Integration\Interfaces\PendingOrderTransitionService;
 use Mollie\BusinessLogic\WebHook\PaymentChangedWebHookEvent;
 use Mollie\Infrastructure\ServiceRegister;
 
@@ -22,6 +23,7 @@ class StatusWebHookHandler
         'canceled' => 'cancelOrder',
         'authorized' => 'authorizeOrder',
         'failed' => 'failOrder',
+        'pending' => 'pendingOrder',
     );
 
     /**
@@ -38,8 +40,14 @@ class StatusWebHookHandler
             return;
         }
 
+        // the pending transition is optional, it is called only for integrations that opt in
+        $orderTransitionService = $this->getOrderTransitionService();
+        if ($serviceMethod === 'pendingOrder' && !$orderTransitionService instanceof PendingOrderTransitionService) {
+            return;
+        }
+
         call_user_func(
-            array($this->getOrderTransitionService(), $serviceMethod),
+            array($orderTransitionService, $serviceMethod),
             $event->getOrderReference()->getShopReference(),
             $event->getNewPayment()->getMetadata()
         );

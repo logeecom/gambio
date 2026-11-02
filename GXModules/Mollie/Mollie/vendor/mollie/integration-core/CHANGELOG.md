@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [v1.3.12](https://github.com/mollie/orocore/tree/v1.3.12) - 2026-11-02
+- Add Wero and Pay by Bank payment methods
+- Add optional pending order transition (PendingOrderTransitionService) for payments that become pending
+- Always use manual capture mode for Riverty payments
+
+## [v1.3.11](https://github.com/mollie/orocore/tree/v1.3.11) - 2025-08-28
+- Add order lines to the payment object
+- Add Captures API functionality
+
+## [v1.3.10](https://github.com/mollie/orocore/tree/v1.3.10) - 2024-10-18
+- Add Twint payment method
+- Add Alma payment method
+
+## [v1.3.9](https://github.com/mollie/orocore/tree/v1.3.9) - 2024-09-26
+- Add Billie payment method
+- Add Klarna One payment method
+- Add Riverty payment method
+- Deactivate Giropay. Add Trustly payment method
+
 ## [v1.3.8](https://github.com/mollie/orocore/tree/v1.3.8) - 2024-04-19
 - Add casting to array in DTO classes
 

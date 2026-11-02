@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "mollie/integration-core",
-            "version": "1.3.10",
-            "version_normalized": "1.3.10.0",
+            "version": "1.3.12",
+            "version_normalized": "1.3.12.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:mollie/orocore.git",
-                "reference": "c651e7ca353219121dbe13cca34fc02393a9cb2c"
+                "reference": "84a4bc9dfcef71803e7c1be74f586506998ca802"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mollie/orocore/zipball/c651e7ca353219121dbe13cca34fc02393a9cb2c",
-                "reference": "c651e7ca353219121dbe13cca34fc02393a9cb2c",
+                "url": "https://api.github.com/repos/mollie/orocore/zipball/84a4bc9dfcef71803e7c1be74f586506998ca802",
+                "reference": "84a4bc9dfcef71803e7c1be74f586506998ca802",
                 "shasum": ""
             },
             "require": {
@@ -24,7 +24,7 @@
                 "phpunit/phpunit": "^4.8.35",
                 "symfony/console": "^5.1"
             },
-            "time": "2024-09-27T09:30:33+00:00",
+            "time": "2026-11-02T08:54:49+00:00",
             "type": "library",
             "installation-source": "source",
             "autoload": {

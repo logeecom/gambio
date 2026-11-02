@@ -26,4 +26,5 @@ class PaymentMethods
     const Twint = 'twint';
     const Alma = 'alma';
     const Wero = 'wero';
+    const PayByBank = 'paybybank';
 }
