@@ -31,8 +31,6 @@ class OrderTransitionService implements BaseService
     {
         $comment = $this->getComment('mollie_expired');
         $this->mapToCancelledStatus($orderId, $comment);
-        $orderResetService = new OrderResetService();
-        $orderResetService->resetOrder($orderId);
     }
 
     /**
@@ -96,10 +94,7 @@ class OrderTransitionService implements BaseService
             return;
         }
 
-        /** @var \OrderReadServiceInterface $orderReadService */
-        $orderReadService = \StaticGXCoreLoader::getService('OrderRead');
-        $order = $orderReadService->getOrderById(new \IdType($orderId));
-        if ((int)$order->getStatusId() !== (int)$statusMap['mollie_created']) {
+        if ($this->getCurrentStatusId($orderId) !== (int)$statusMap['mollie_created']) {
             return;
         }
 
@@ -107,6 +102,9 @@ class OrderTransitionService implements BaseService
     }
 
     /**
+     * Cancels the order and restores its stock. An order that is already canceled is left unchanged, so the
+     * stock is restored only once, whether the webhook, the customer return or the merchant canceled it first.
+     *
      * @param $orderId
      * @param $comment
      *
@@ -114,7 +112,27 @@ class OrderTransitionService implements BaseService
      */
     private function mapToCancelledStatus($orderId, $comment)
     {
+        $canceledStatusId = (int)$this->getOrderStatusMapper()->mapToGambioStatus('mollie_canceled');
+        if ($this->getCurrentStatusId($orderId) === $canceledStatusId) {
+            return;
+        }
+
         $this->updateStatus($orderId, 'mollie_canceled', $comment);
+        $orderResetService = new OrderResetService();
+        $orderResetService->resetOrder($orderId);
+    }
+
+    /**
+     * @param string $orderId
+     *
+     * @return int
+     */
+    private function getCurrentStatusId($orderId)
+    {
+        /** @var \OrderReadServiceInterface $orderReadService */
+        $orderReadService = \StaticGXCoreLoader::getService('OrderRead');
+
+        return (int)$orderReadService->getOrderById(new \IdType($orderId))->getStatusId();
     }
 
     /**

@@ -6,6 +6,7 @@ use Mollie\BusinessLogic\OrderReference\Model\OrderReference;
 use Mollie\BusinessLogic\OrderReference\OrderReferenceService;
 use Mollie\BusinessLogic\WebHook\WebHookContext;
 use Mollie\BusinessLogic\WebHook\WebHookTransformer;
+use Mollie\Gambio\Utility\DatabaseLock;
 use Mollie\Infrastructure\Http\Exceptions\HttpCommunicationException;
 use Mollie\Infrastructure\Logger\Logger;
 use Mollie\Infrastructure\ServiceRegister;
@@ -17,6 +18,11 @@ include_once DIR_FS_CATALOG . '/GXModules/Mollie/Mollie/autoload.php';
  */
 class MollieWebhookController extends HttpViewController
 {
+    /**
+     * Seconds to wait for the customer return or another webhook that is processing the same order
+     */
+    const LOCK_TIMEOUT = 10;
+
     /**
      * @var WebHookTransformer
      */
@@ -32,11 +38,20 @@ class MollieWebhookController extends HttpViewController
     {
         try {
             $success = true;
-            $this->_checkOrderReference();
-            WebHookContext::start();
+            $orderReference = $this->_checkOrderReference();
             $rawRequest = file_get_contents('php://input');
-            $this->_getWebhookTransformer()->handle($rawRequest);
-            WebHookContext::stop();
+            $webhookTransformer = $this->_getWebhookTransformer();
+            $isHandled = DatabaseLock::forOrder($orderReference->getShopReference())->execute(
+                static::LOCK_TIMEOUT,
+                function () use ($webhookTransformer, $rawRequest) {
+                    WebHookContext::start();
+                    $webhookTransformer->handle($rawRequest);
+                    WebHookContext::stop();
+                }
+            );
+            if (!$isHandled) {
+                throw new RuntimeException('Order is being processed: ' . $orderReference->getShopReference());
+            }
 
         } catch (Exception $exception) {
             Logger::logError('Cannot process webhook:' . $exception->getMessage());
@@ -50,6 +65,11 @@ class MollieWebhookController extends HttpViewController
         );
     }
 
+    /**
+     * @return OrderReference
+     *
+     * @throws MollieReferenceNotFoundException
+     */
     protected function _checkOrderReference()
     {
         /** @var OrderReferenceService $orderReferenceService */
@@ -62,6 +82,8 @@ class MollieWebhookController extends HttpViewController
                 throw new MollieReferenceNotFoundException('Mollie reference not found:' . $_POST['id']);
             }
         }
+
+        return $orderReference;
     }
 
     /**
