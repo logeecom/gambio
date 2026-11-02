@@ -57,6 +57,10 @@ class MollieWebhookController extends HttpViewController
             Logger::logError('Cannot process webhook:' . $exception->getMessage());
             $success = false;
             http_response_code(422);
+        } catch (Throwable $exception) {
+            Logger::logError('Cannot process webhook:' . $exception->getMessage());
+            $success = false;
+            http_response_code(422);
         }
 
         return MainFactory::create(

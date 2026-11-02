@@ -17,10 +17,13 @@ class MollieTranslator
     /**
      * initializes for the given languages_id or session language.
      * Uses session language as a default if no languages_id is given.
+     *
+     * @param int|null $languageId
      */
-    public function __construct()
+    public function __construct($languageId = null)
     {
-        $this->languageTextManager = \MainFactory::create_object('LanguageTextManager', ['module_center_module', $_SESSION['languages_id']]);
+        $languageId = $languageId ?: $_SESSION['languages_id'];
+        $this->languageTextManager = \MainFactory::create_object('LanguageTextManager', ['module_center_module', $languageId]);
     }
 
     /**

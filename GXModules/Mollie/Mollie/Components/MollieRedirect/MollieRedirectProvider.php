@@ -58,9 +58,11 @@ class MollieRedirectProvider
             return UrlProvider::generateShopUrl('account_history.php');
         }
 
-        $this->_synchronizePaymentStatus($order);
-        $order = $this->_getOrder($orderId);
         $statusMapping = $this->statusMapper->getStatusMap();
+        if ($this->_synchronizePaymentStatus($order, $statusMapping)) {
+            $order = $this->_getOrder($orderId);
+        }
+
         if ($order !== null && (int)$order->getStatusId() === (int)$statusMapping['mollie_canceled']) {
             return $this->_getCanceledPaymentUrl($order);
         }
@@ -75,38 +77,53 @@ class MollieRedirectProvider
      * usually returns before the webhook is processed, so the order status alone is not reliable.
      *
      * @param \OrderInterface $order
+     * @param array           $statusMapping
+     *
+     * @return bool True if the synchronization was attempted, so the order status may have changed
      */
-    private function _synchronizePaymentStatus(\OrderInterface $order)
+    private function _synchronizePaymentStatus(\OrderInterface $order, array $statusMapping)
     {
-        $statusMapping = $this->statusMapper->getStatusMap();
         $unconfirmedStatuses = [(int)$statusMapping['mollie_created'], (int)$statusMapping['mollie_pending']];
         if (!in_array((int)$order->getStatusId(), $unconfirmedStatuses, true)) {
-            return;
+            return false;
         }
 
         /** @var OrderReferenceService $orderReferenceService */
         $orderReferenceService = ServiceRegister::getService(OrderReferenceService::CLASS_NAME);
         $orderReference = $orderReferenceService->getByShopReference((string)$order->getOrderId());
         if ($orderReference === null || !$orderReference->getMollieReference()) {
-            return;
+            return false;
         }
 
         /** @var WebHookTransformer $webHookTransformer */
         $webHookTransformer = ServiceRegister::getService(WebHookTransformer::CLASS_NAME);
         $rawRequest = http_build_query(['id' => $orderReference->getMollieReference()]);
         try {
-            DatabaseLock::forOrder($order->getOrderId())->execute(
+            $isSynchronized = DatabaseLock::forOrder($order->getOrderId())->execute(
                 static::LOCK_TIMEOUT,
                 function () use ($webHookTransformer, $rawRequest) {
                     $webHookTransformer->handle($rawRequest);
                 }
             );
+            if (!$isSynchronized) {
+                $this->_logSynchronizationFailure($order->getOrderId(), 'the order is being processed by the webhook');
+            }
         } catch (\Exception $exception) {
-            Logger::logWarning(
-                "Payment status for order {$order->getOrderId()} could not be synchronized: {$exception->getMessage()}",
-                'Integration'
-            );
+            $this->_logSynchronizationFailure($order->getOrderId(), $exception->getMessage());
+        } catch (\Throwable $exception) {
+            $this->_logSynchronizationFailure($order->getOrderId(), $exception->getMessage());
         }
+
+        return true;
+    }
+
+    /**
+     * @param int    $orderId
+     * @param string $reason
+     */
+    private function _logSynchronizationFailure($orderId, $reason)
+    {
+        Logger::logWarning("Payment status for order {$orderId} could not be synchronized: {$reason}", 'Integration');
     }
 
     /**

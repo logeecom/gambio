@@ -27,6 +27,23 @@ class GambioLanguageRepository extends GambioBaseRepository
     }
 
     /**
+     * Returns the id of the language with the given code, or null if the language does not exist
+     *
+     * @param string $code
+     *
+     * @return int|null
+     */
+    public function getLanguageIdByCode($code)
+    {
+        $language = $this->queryBuilder->select('languages_id AS id')
+            ->where('code', (string)$code)
+            ->get('languages')
+            ->row_array();
+
+        return empty($language) ? null : (int)$language['id'];
+    }
+
+    /**
      * @inheritDoc
      */
     protected function _getTableName()
