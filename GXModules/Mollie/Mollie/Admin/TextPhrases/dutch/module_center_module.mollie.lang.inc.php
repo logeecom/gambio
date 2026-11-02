@@ -169,8 +169,6 @@ $t_language_text_section_content_array = [
     'mollie.payment.webhook.notification.order_expire_error.title'       => 'De wijziging van Mollie is niet gesynchroniseerd',
     'mollie.payment.webhook.notification.order_expire_error.description' => 'Bestelling is verlopen in het Mollie-portaal.',
 
-    'mollie.payment.webhook.notification.order_cancel_error.title'       => 'De wijziging van Mollie is niet gesynchroniseerd',
-    'mollie.payment.webhook.notification.order_cancel_error.description' => 'Bestelling is geannuleerd in het Mollie-portaal.',
     'mollie.payment.redirect.payment_not_completed.description' => 'De betaling is niet voltooid. Kies een betaalmethode en probeer het opnieuw.',
 
     'mollie.payment.webhook.notification.order_refund_error.title'       => 'De wijziging van Mollie is niet gesynchroniseerd',

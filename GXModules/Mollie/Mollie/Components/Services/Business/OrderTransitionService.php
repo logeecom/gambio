@@ -3,6 +3,8 @@
 namespace Mollie\Gambio\Services\Business;
 
 use Mollie\BusinessLogic\Integration\Interfaces\OrderTransitionService as BaseService;
+use Mollie\BusinessLogic\Integration\Interfaces\PendingOrderTransitionService;
+use Mollie\Gambio\Entity\Repository\GambioLanguageRepository;
 use Mollie\Gambio\OrderReset\OrderResetService;
 use Mollie\Gambio\Utility\MollieTranslator;
 
@@ -11,10 +13,22 @@ use Mollie\Gambio\Utility\MollieTranslator;
  *
  * @package Mollie\Gambio\Services\Business
  */
-class OrderTransitionService implements BaseService
+class OrderTransitionService implements BaseService, PendingOrderTransitionService
 {
 
     use StatusUpdate;
+
+    /**
+     * Gambio cancel status used when the setting is not available
+     */
+    const DEFAULT_CANCEL_STATUS_ID = 99;
+
+    /**
+     * Payment modules whose orders are put on hold while the payment is pending (the funds have not arrived yet)
+     *
+     * @var string[]
+     */
+    private static $onHoldPaymentModules = ['mollie_paybybank'];
 
     /**
      * @inheritDoc
@@ -79,8 +93,9 @@ class OrderTransitionService implements BaseService
     }
 
     /**
-     * Puts the order on hold until the payment is confirmed. Only orders that are still in
-     * the created status are updated, so the status set by a later transition is never overwritten.
+     * Puts the order on hold until the payment is confirmed. Only orders of payment methods that wait for the
+     * funds (Pay by Bank) that are still in the created status are updated, so the status set by a later
+     * transition is never overwritten.
      *
      * @param string $orderId
      * @param array  $metadata
@@ -94,7 +109,10 @@ class OrderTransitionService implements BaseService
             return;
         }
 
-        if ($this->getCurrentStatusId($orderId) !== (int)$statusMap['mollie_created']) {
+        $order = $this->getOrder($orderId);
+        if ((int)$order->getStatusId() !== (int)$statusMap['mollie_created']
+            || !in_array($order->getPaymentType()->getModule(), static::$onHoldPaymentModules, true)
+        ) {
             return;
         }
 
@@ -112,8 +130,11 @@ class OrderTransitionService implements BaseService
      */
     private function mapToCancelledStatus($orderId, $comment)
     {
-        $canceledStatusId = (int)$this->getOrderStatusMapper()->mapToGambioStatus('mollie_canceled');
-        if ($this->getCurrentStatusId($orderId) === $canceledStatusId) {
+        $canceledStatusIds = [
+            (int)$this->getOrderStatusMapper()->mapToGambioStatus('mollie_canceled'),
+            $this->getGambioCancelStatusId(),
+        ];
+        if (in_array((int)$this->getOrder($orderId)->getStatusId(), $canceledStatusIds, true)) {
             return;
         }
 
@@ -123,16 +144,28 @@ class OrderTransitionService implements BaseService
     }
 
     /**
-     * @param string $orderId
+     * Returns the status Gambio sets when the merchant cancels an order (and optionally restocks it)
      *
      * @return int
      */
-    private function getCurrentStatusId($orderId)
+    private function getGambioCancelStatusId()
+    {
+        $statusId = function_exists('gm_get_conf') ? (int)gm_get_conf('GM_ORDER_STATUS_CANCEL_ID') : 0;
+
+        return $statusId ?: static::DEFAULT_CANCEL_STATUS_ID;
+    }
+
+    /**
+     * @param string $orderId
+     *
+     * @return \OrderInterface
+     */
+    private function getOrder($orderId)
     {
         /** @var \OrderReadServiceInterface $orderReadService */
         $orderReadService = \StaticGXCoreLoader::getService('OrderRead');
 
-        return (int)$orderReadService->getOrderById(new \IdType($orderId))->getStatusId();
+        return $orderReadService->getOrderById(new \IdType($orderId));
     }
 
     /**
@@ -142,7 +175,11 @@ class OrderTransitionService implements BaseService
      */
     private function getComment($statusCode)
     {
-        $translate = new MollieTranslator();
+        // comments are written by the webhook and by the customer return, so the shop default language is used
+        // instead of the language of the request
+        $languageRepository = new GambioLanguageRepository();
+        $defaultLanguage = defined('DEFAULT_LANGUAGE') ? DEFAULT_LANGUAGE : '';
+        $translate = new MollieTranslator($languageRepository->getLanguageIdByCode($defaultLanguage));
 
         return $translate->translate("{$statusCode}_comment");
     }

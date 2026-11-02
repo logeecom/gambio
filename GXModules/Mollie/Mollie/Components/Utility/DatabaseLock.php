@@ -48,7 +48,7 @@ class DatabaseLock
      *
      * @return bool False if the lock was not acquired and the callback was not run
      *
-     * @throws \Exception Rethrown from the callback after the lock is released
+     * @throws \Exception|\Throwable Rethrown from the callback after the lock is released
      */
     public function execute($timeout, $callback)
     {
@@ -59,6 +59,9 @@ class DatabaseLock
         try {
             call_user_func($callback);
         } catch (\Exception $exception) {
+            $this->release();
+            throw $exception;
+        } catch (\Throwable $exception) {
             $this->release();
             throw $exception;
         }

@@ -161,8 +161,6 @@ $t_language_text_section_content_array = [
     'mollie.payment.webhook.notification.order_expire_error.title'       => 'Cambio Mollie no sincronizado',
     'mollie.payment.webhook.notification.order_expire_error.description' => 'Pedido expirado en el portal Mollie.',
 
-    'mollie.payment.webhook.notification.order_cancel_error.title'       => 'Cambio Mollie no sincronizado',
-    'mollie.payment.webhook.notification.order_cancel_error.description' => 'Pedido cancelado en el portal Mollie.',
     'mollie.payment.redirect.payment_not_completed.description' => 'El pago no se ha completado. Elige un método de pago e inténtalo de nuevo.',
 
     'mollie.payment.webhook.notification.order_refund_error.title'       => 'Cambio Mollie no sincronizado',
