@@ -121,6 +121,7 @@ $t_language_text_section_content_array = [
 
     'mollie.payment.integration.event.notification.order_cancel_error.title'       => 'Sincronizzazione modifica negozio fallita',
     'mollie.payment.integration.event.notification.order_cancel_error.description' => 'Impossibile annullare ordine Mollie. Risposta API Mollie {api_message}',
+    'mollie.payment.redirect.payment_not_completed.description' => 'Il pagamento non è stato completato. Scegli un metodo di pagamento e riprova.',
 
     'mollie.payment.integration.event.notification.order_cancel.title'       => 'Evento di annullamento ordine rilevato',
     'mollie.payment.integration.event.notification.order_cancel.description' => 'L\'annullamento dell\'ordine non è supportato, quindi questa modifica non viene sincronizzata con Mollie',

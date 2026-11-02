@@ -3,13 +3,12 @@
 
 namespace Mollie\Gambio\MollieRedirect;
 
-use Mollie\BusinessLogic\Http\DTO\Payment;
-use Mollie\BusinessLogic\Payments\PaymentService;
+use Mollie\BusinessLogic\OrderReference\OrderReferenceService;
+use Mollie\BusinessLogic\WebHook\WebHookTransformer;
 use Mollie\Gambio\Mappers\OrderStatusMapper;
-use Mollie\Gambio\OrderReset\OrderResetService;
+use Mollie\Gambio\Utility\DatabaseLock;
 use Mollie\Gambio\Utility\MollieTranslator;
 use Mollie\Gambio\Utility\UrlProvider;
-use Mollie\Gambio\WebHook\PendingPaymentWebHookHandler;
 use Mollie\Infrastructure\Logger\Logger;
 use Mollie\Infrastructure\ServiceRegister;
 
@@ -20,6 +19,10 @@ use Mollie\Infrastructure\ServiceRegister;
  */
 class MollieRedirectProvider
 {
+    /**
+     * Seconds to wait for a webhook that is processing the same order
+     */
+    const LOCK_TIMEOUT = 5;
 
     /**
      * @var \OrderReadServiceInterface
@@ -29,10 +32,6 @@ class MollieRedirectProvider
      * @var OrderStatusMapper
      */
     private $statusMapper;
-    /**
-     * @var OrderResetService
-     */
-    private $orderResetService;
 
     /**
      * PaymentLinkProvider constructor.
@@ -40,12 +39,11 @@ class MollieRedirectProvider
     public function __construct()
     {
         $this->orderReadService = \StaticGXCoreLoader::getService('OrderRead');
-        $this->orderResetService = new OrderResetService();
         $this->statusMapper = new OrderStatusMapper();
     }
 
     /**
-     * Returns success or payment selection link, depending on order status
+     * Returns success or payment selection link, depending on the payment status
      *
      * @param int $orderId
      *
@@ -54,68 +52,97 @@ class MollieRedirectProvider
      */
     public function getRedirectUrl($orderId)
     {
-        /** @var \OrderInterface $order */
-        $order = $this->orderReadService->getOrderById(new \IdType($orderId));
-        if ($order) {
-            $this->_holdPendingPayment($order);
-            $statusMapping = $this->statusMapper->getStatusMap();
-            if ((int)$order->getStatusId() === (int)$statusMapping['mollie_canceled']) {
-                $this->orderResetService->resetOrder($orderId);
-
-                return $this->_getCanceledPaymentUrl($order);
-            }
+        $orderId = (int)$orderId;
+        $order = $this->_getOrder($orderId);
+        if ($order === null || !$this->_isCustomerOrder($order)) {
+            return UrlProvider::generateShopUrl('account_history.php');
         }
 
-        /** @var \shoppingCart_ORIGIN $cart */
-        $cart = $_SESSION['cart'];
-        $redirectPage = !empty($cart->contents) ? 'checkout_process.php' : 'checkout_success.php';
+        $this->_synchronizePaymentStatus($order);
+        $order = $this->_getOrder($orderId);
+        $statusMapping = $this->statusMapper->getStatusMap();
+        if ($order !== null && (int)$order->getStatusId() === (int)$statusMapping['mollie_canceled']) {
+            return $this->_getCanceledPaymentUrl($order);
+        }
+
+        $redirectPage = $this->_isCheckoutOrder($orderId) ? 'checkout_process.php' : 'checkout_success.php';
 
         return UrlProvider::generateShopUrl($redirectPage);
     }
 
     /**
-     * Puts the order on hold when the customer returns with a pending payment. The customer usually returns
-     * before the pending webhook is processed, and in test mode Mollie does not send it at all.
+     * Applies the current Mollie payment status to the order, the same way as the webhook does. The customer
+     * usually returns before the webhook is processed, so the order status alone is not reliable.
      *
      * @param \OrderInterface $order
      */
-    private function _holdPendingPayment(\OrderInterface $order)
+    private function _synchronizePaymentStatus(\OrderInterface $order)
     {
-        if (!PendingPaymentWebHookHandler::isOnHoldPaymentModule($order->getPaymentType()->getModule())) {
-            return;
-        }
-
         $statusMapping = $this->statusMapper->getStatusMap();
-        if ((int)$order->getStatusId() !== (int)$statusMapping['mollie_created']) {
+        $unconfirmedStatuses = [(int)$statusMapping['mollie_created'], (int)$statusMapping['mollie_pending']];
+        if (!in_array((int)$order->getStatusId(), $unconfirmedStatuses, true)) {
             return;
         }
 
-        $payment = $this->_getPayment($order->getOrderId());
-        if ($payment !== null) {
-            PendingPaymentWebHookHandler::holdOrder($order->getOrderId(), $payment);
+        /** @var OrderReferenceService $orderReferenceService */
+        $orderReferenceService = ServiceRegister::getService(OrderReferenceService::CLASS_NAME);
+        $orderReference = $orderReferenceService->getByShopReference((string)$order->getOrderId());
+        if ($orderReference === null || !$orderReference->getMollieReference()) {
+            return;
+        }
+
+        /** @var WebHookTransformer $webHookTransformer */
+        $webHookTransformer = ServiceRegister::getService(WebHookTransformer::CLASS_NAME);
+        $rawRequest = http_build_query(['id' => $orderReference->getMollieReference()]);
+        try {
+            DatabaseLock::forOrder($order->getOrderId())->execute(
+                static::LOCK_TIMEOUT,
+                function () use ($webHookTransformer, $rawRequest) {
+                    $webHookTransformer->handle($rawRequest);
+                }
+            );
+        } catch (\Exception $exception) {
+            Logger::logWarning(
+                "Payment status for order {$order->getOrderId()} could not be synchronized: {$exception->getMessage()}",
+                'Integration'
+            );
         }
     }
 
     /**
      * @param int $orderId
      *
-     * @return Payment|null
+     * @return \OrderInterface|null
      */
-    private function _getPayment($orderId)
+    private function _getOrder($orderId)
     {
         try {
-            /** @var PaymentService $paymentService */
-            $paymentService = ServiceRegister::getService(PaymentService::CLASS_NAME);
-
-            return $paymentService->getPayment((string)$orderId);
+            return $this->orderReadService->getOrderById(new \IdType($orderId));
         } catch (\Exception $exception) {
-            Logger::logWarning(
-                "Payment status for order {$orderId} could not be fetched: {$exception->getMessage()}",
-                'Integration'
-            );
-
             return null;
         }
+    }
+
+    /**
+     * @param \OrderInterface $order
+     *
+     * @return bool
+     */
+    private function _isCustomerOrder(\OrderInterface $order)
+    {
+        return isset($_SESSION['customer_id']) && (int)$order->getCustomerId() === (int)$_SESSION['customer_id'];
+    }
+
+    /**
+     * Checks whether the order is the one being placed in the current checkout
+     *
+     * @param int $orderId
+     *
+     * @return bool
+     */
+    private function _isCheckoutOrder($orderId)
+    {
+        return isset($_SESSION['tmp_oID']) && (int)$_SESSION['tmp_oID'] === (int)$orderId;
     }
 
     /**
@@ -125,16 +152,14 @@ class MollieRedirectProvider
      */
     private function _getCanceledPaymentUrl(\OrderInterface $order)
     {
-        /** @var \shoppingCart_ORIGIN $cart */
-        $cart = $_SESSION['cart'];
-        if (!empty($cart->contents)) {
-            $lang = new MollieTranslator();
-            $paymentClass = $order->getPaymentType()->getModule();
-            $_SESSION[$paymentClass . '_error'] = $lang->translate('mollie.payment.webhook.notification.order_cancel_error.description');
-
-            return UrlProvider::generateShopUrl('checkout_payment.php', '', ['payment_error' => $paymentClass]);
+        if (!$this->_isCheckoutOrder($order->getOrderId())) {
+            return UrlProvider::generateShopUrl('account_history_info.php', '', ['order_id' => $order->getOrderId()]);
         }
 
-        return UrlProvider::generateShopUrl('account_history_info.php', '', ['order_id' => $order->getOrderId()]);
+        $lang = new MollieTranslator();
+        $paymentClass = $order->getPaymentType()->getModule();
+        $_SESSION[$paymentClass . '_error'] = $lang->translate('mollie.payment.redirect.payment_not_completed.description');
+
+        return UrlProvider::generateShopUrl('checkout_payment.php', '', ['payment_error' => $paymentClass]);
     }
 }

@@ -4,6 +4,7 @@ namespace Mollie\Gambio\Update\v3_1_6;
 
 use Mollie\Gambio\Entity\Repository\GambioConfigRepository;
 use Mollie\Gambio\Entity\Repository\GambioStatusRepository;
+use Mollie\Gambio\Utility\DatabaseLock;
 
 /**
  * Class OrderStatusUpdate
@@ -14,7 +15,7 @@ use Mollie\Gambio\Entity\Repository\GambioStatusRepository;
  */
 class OrderStatusUpdate
 {
-    const LOCK_NAME = 'mollie_order_status_update';
+    const LOCK_NAME = 'order_status_update';
     const LOCK_TIMEOUT = 10;
 
     /**
@@ -45,14 +46,11 @@ class OrderStatusUpdate
         }
 
         // concurrent requests must not create the same status twice
-        $db = \StaticGXCoreLoader::getDatabaseQueryBuilder();
-        $lock = $db->query('SELECT GET_LOCK(?, ?) AS acquired', [static::LOCK_NAME, static::LOCK_TIMEOUT])->row_array();
-        if (empty($lock['acquired'])) {
-            return [];
-        }
-
-        $createdStatuses = $this->createMissingStatuses();
-        $db->query('SELECT RELEASE_LOCK(?)', [static::LOCK_NAME]);
+        $createdStatuses = [];
+        $lock = new DatabaseLock(static::LOCK_NAME);
+        $lock->execute(static::LOCK_TIMEOUT, function () use (&$createdStatuses) {
+            $createdStatuses = $this->createMissingStatuses();
+        });
 
         return $createdStatuses;
     }

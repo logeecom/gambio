@@ -172,6 +172,7 @@ $t_language_text_section_content_array = [
 
     'mollie.payment.webhook.notification.order_cancel_error.title'       => 'Mollie change is not synchronized',
     'mollie.payment.webhook.notification.order_cancel_error.description' => 'Order is canceled in Mollie portal.',
+    'mollie.payment.redirect.payment_not_completed.description' => 'The payment was not completed. Please choose a payment method and try again.',
 
     'mollie.payment.webhook.notification.order_refund_error.title'       => 'Mollie change is not synchronized',
     'mollie.payment.webhook.notification.order_refund_error.description' => 'Order is refunded in Mollie portal.',
