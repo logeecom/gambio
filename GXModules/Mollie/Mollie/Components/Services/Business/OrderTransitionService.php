@@ -81,6 +81,32 @@ class OrderTransitionService implements BaseService
     }
 
     /**
+     * Puts the order on hold until the payment is confirmed. Only orders that are still in
+     * the created status are updated, so the status set by a later transition is never overwritten.
+     *
+     * @param string $orderId
+     * @param array  $metadata
+     *
+     * @throws \Mollie\Infrastructure\ORM\Exceptions\RepositoryNotRegisteredException
+     */
+    public function pendingOrder($orderId, array $metadata)
+    {
+        $statusMap = $this->getOrderStatusMapper()->getStatusMap();
+        if (empty($statusMap['mollie_pending']) || (int)$statusMap['mollie_pending'] === (int)$statusMap['mollie_created']) {
+            return;
+        }
+
+        /** @var \OrderReadServiceInterface $orderReadService */
+        $orderReadService = \StaticGXCoreLoader::getService('OrderRead');
+        $order = $orderReadService->getOrderById(new \IdType($orderId));
+        if ((int)$order->getStatusId() !== (int)$statusMap['mollie_created']) {
+            return;
+        }
+
+        $this->updateStatus($orderId, 'mollie_pending', $this->getComment('mollie_pending'));
+    }
+
+    /**
      * @param $orderId
      * @param $comment
      *

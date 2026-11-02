@@ -20,6 +20,19 @@
 
     <div class="form-group mollie-vertical-align">
         <div class="col-md-3 mollie-vertical-align">
+            {$txt.mollie_status} {$txt.mollie_pending}
+        </div>
+        <div class="col-md-7 mollie-vertical-align">
+            <select id="mollie-pending" name="orderStatuses[mollie_pending]" class="form-control order-status">
+                {foreach item=order_status from=$content.order_statuses}
+                <option value="{$order_status.id}" {if $order_status.id == $content.saved_statuses.mollie_pending}selected{/if}>{$order_status.name}</option>
+                {/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group mollie-vertical-align">
+        <div class="col-md-3 mollie-vertical-align">
             {$txt.mollie_status} {$txt.mollie_authorized}
         </div>
         <div class="col-md-7 mollie-vertical-align">

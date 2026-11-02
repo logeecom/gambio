@@ -14,6 +14,7 @@ use Mollie\BusinessLogic\OrderReference\Model\OrderReference;
 use Mollie\BusinessLogic\PaymentMethod\Model\PaymentMethodConfig;
 use Mollie\BusinessLogic\PaymentMethod\PaymentTransactionDescriptionService;
 use Mollie\BusinessLogic\VersionCheck\VersionCheckService;
+use Mollie\BusinessLogic\WebHook\PaymentChangedWebHookEvent;
 use Mollie\Gambio\APIProcessor\PaymentProcessor;
 use Mollie\Gambio\APIProcessor\ProcessorRegister;
 use Mollie\Gambio\Entity\Repository\BaseRepository;
@@ -23,6 +24,7 @@ use Mollie\Gambio\Services\Business\ConfigurationService;
 use Mollie\Gambio\Services\Business\PaymentMethodService;
 use Mollie\Gambio\Services\Business\TransactionDescriptionService;
 use Mollie\Gambio\Services\Infrastructure\LoggerService;
+use Mollie\Gambio\WebHook\PendingPaymentWebHookHandler;
 use Mollie\Infrastructure\Configuration\ConfigEntity;
 use Mollie\Infrastructure\Configuration\Configuration;
 use Mollie\Infrastructure\Http\CurlHttpClient;
@@ -30,6 +32,7 @@ use Mollie\Infrastructure\Http\HttpClient;
 use Mollie\Infrastructure\Logger\Interfaces\ShopLoggerAdapter;
 use Mollie\Infrastructure\ORM\RepositoryRegistry;
 use Mollie\Infrastructure\ServiceRegister;
+use Mollie\Infrastructure\Utility\Events\EventBus;
 
 /**
  * Class BootstrapComponent
@@ -133,6 +136,24 @@ class BootstrapComponent extends \Mollie\BusinessLogic\BootstrapComponent
         RepositoryRegistry::registerRepository(StatusMapping::getClassName(), BaseRepository::getClassName());
         RepositoryRegistry::registerRepository(OrderReference::getClassName(), BaseRepository::getClassName());
         RepositoryRegistry::registerRepository(CustomerReference::getClassName(), BaseRepository::getClassName());
+    }
+
+    /**
+     * Initializes events
+     */
+    protected static function initEvents()
+    {
+        parent::initEvents();
+
+        /** @var EventBus $eventBus */
+        $eventBus = ServiceRegister::getService(EventBus::CLASS_NAME);
+        $eventBus->when(
+            PaymentChangedWebHookEvent::CLASS_NAME,
+            static function (PaymentChangedWebHookEvent $event) {
+                $handler = new PendingPaymentWebHookHandler();
+                $handler->handle($event);
+            }
+        );
     }
 
     /**

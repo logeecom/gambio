@@ -40,6 +40,7 @@ $t_language_text_section_content_array = [
     'mollie_authorized'              => 'Autorizzato',
     'mollie_paid'                    => 'Pagato',
     'mollie_refunded'                => 'Rimborsato',
+    'mollie_pending'                 => 'In attesa',
     'mollie_none'                    => 'Nessuno',
     'mollie_cancel'                  => 'Annulla',
     'mollie_save_changes'            => 'Salva modifiche',
@@ -116,6 +117,7 @@ $t_language_text_section_content_array = [
     'mollie_canceled_comment' => 'Il cliente ha annullato il pagamento.',
     'mollie_expired_comment'  => 'Il pagamento è scaduto su Mollie.',
     'mollie_failed_comment'   => 'Il pagamento è fallito e non può essere completato con il metodo selezionato.',
+    'mollie_pending_comment'  => 'Il pagamento è in attesa. L\'ordine è sospeso finché Mollie non conferma il pagamento.',
 
     'mollie.payment.integration.event.notification.order_cancel_error.title'       => 'Sincronizzazione modifica negozio fallita',
     'mollie.payment.integration.event.notification.order_cancel_error.description' => 'Impossibile annullare ordine Mollie. Risposta API Mollie {api_message}',

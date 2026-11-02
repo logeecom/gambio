@@ -44,6 +44,13 @@ class MollieModuleCenterModule extends AbstractModuleCenterModule
             ],
             'color' => '3075FA',
         ],
+        'mollie_pending'    => [
+            'names' => [
+                'en' => 'Pending (Mollie)',
+                'de' => 'Pending (Mollie)',
+            ],
+            'color' => 'E67E22',
+        ],
 
     ];
 
@@ -55,6 +62,16 @@ class MollieModuleCenterModule extends AbstractModuleCenterModule
      * @var GambioConfigRepository
      */
     private $configRepository;
+
+    /**
+     * Returns order statuses that are created by the module
+     *
+     * @return array[]
+     */
+    public static function getDefaultStatuses()
+    {
+        return static::$defaultStatuses;
+    }
 
     /**
      * @inheritDoc
@@ -154,7 +171,7 @@ class MollieModuleCenterModule extends AbstractModuleCenterModule
 
         $defaultStatusesMap = [];
         foreach (static::$defaultStatuses as $statusKey => $defaultStatus) {
-            $id                             = $this->_createOrderStatus($defaultStatus['names'], $defaultStatus['color']);
+            $id                             = $this->orderStatusRepository->createStatus($defaultStatus['names'], $defaultStatus['color']);
             $defaultStatusesMap[$statusKey] = $id;
         }
 
@@ -163,41 +180,5 @@ class MollieModuleCenterModule extends AbstractModuleCenterModule
             VALUES ('configuration/" . static::MOLLIE_DEFAULT_STATUSES . "', '" . json_encode($defaultStatusesMap) . "')";
 
         $this->db->query($sql);
-    }
-
-    /**
-     * @param array  $names
-     * @param string $color
-     *
-     * @return int
-     */
-    private function _createOrderStatus($names, $color)
-    {
-        $newStatus = [];
-        foreach ($names as $languageCode => $statusName) {
-            $newStatus[] = [
-                'language_id' => $this->_getLanguageId($languageCode),
-                'orders_status_name' => $statusName,
-                'color' => $color,
-            ];
-        }
-        return $this->orderStatusRepository->insertStatus($newStatus);
-    }
-
-    /**
-     * @param string $code
-     *
-     * @return int
-     */
-    private function _getLanguageId($code)
-    {
-        $languages = xtc_get_languages();
-        foreach ($languages as $language) {
-            if ($language['code'] === $code) {
-                return (int)$language['id'];
-            }
-        }
-
-        return 1;
     }
 }
