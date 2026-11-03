@@ -7,6 +7,7 @@ use Mollie\BusinessLogic\Surcharge\SurchargeService;
 use Mollie\BusinessLogic\Surcharge\SurchargeType;
 use Mollie\Gambio\APIProcessor\ProcessorFactory;
 use Mollie\Gambio\Entity\Repository\GambioConfigRepository;
+use Mollie\Gambio\MollieRedirect\MollieRedirectProvider;
 use Mollie\Gambio\Services\Business\ConfigurationService;
 use Mollie\Gambio\Update\v2_0_8\PaymentMethodUpdate;
 use Mollie\Gambio\Update\v2_1_5\OrderStatusUpdate;
@@ -159,12 +160,21 @@ class mollie
     }
 
     /**
-     * Not used
+     * Gambio finishes the checkout (confirmation mail, success page) when the checkout is submitted while the order
+     * already exists. That is only allowed after the customer returned from Mollie. Any other submit (e.g. a double
+     * click on the order button) sends the customer to continue the payment instead.
      *
      * @return boolean
      */
     public function before_process()
     {
+        if (!isset($_SESSION['tmp_oID']) || MollieRedirectProvider::consumeReturnedOrder($_SESSION['tmp_oID'])) {
+            return false;
+        }
+
+        $redirectProvider = new MollieRedirectProvider();
+        xtc_redirect($redirectProvider->getPaymentContinuationUrl((int)$_SESSION['tmp_oID']), '');
+
         return false;
     }
 

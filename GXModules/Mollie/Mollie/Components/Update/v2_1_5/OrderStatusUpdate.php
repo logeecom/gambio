@@ -36,7 +36,12 @@ class OrderStatusUpdate
 
         static::$isExecuted = true;
         $installedStatuses = (array)json_decode(constant(\MollieModuleCenterModule::MOLLIE_DEFAULT_STATUSES), true);
-        if (empty($installedStatuses) || empty($this->getMissingStatuses($installedStatuses))) {
+        if (empty($installedStatuses)) {
+            return [];
+        }
+
+        $missingStatuses = $this->getMissingStatuses($installedStatuses);
+        if (empty($missingStatuses)) {
             return [];
         }
 
