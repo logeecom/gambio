@@ -3,7 +3,9 @@
 
 namespace Mollie\Gambio\MollieRedirect;
 
+use Mollie\BusinessLogic\Http\DTO\Payment;
 use Mollie\BusinessLogic\OrderReference\OrderReferenceService;
+use Mollie\BusinessLogic\PaymentMethod\Model\PaymentMethodConfig;
 use Mollie\BusinessLogic\WebHook\WebHookTransformer;
 use Mollie\Gambio\Mappers\OrderStatusMapper;
 use Mollie\Gambio\Utility\DatabaseLock;
@@ -23,6 +25,10 @@ class MollieRedirectProvider
      * Seconds to wait for a webhook that is processing the same order
      */
     const LOCK_TIMEOUT = 5;
+    /**
+     * Session key of the order whose customer returned from Mollie and whose checkout may be finished
+     */
+    const SESSION_RETURNED_ORDER = 'mollie_returned_order';
 
     /**
      * @var \OrderReadServiceInterface
@@ -67,9 +73,67 @@ class MollieRedirectProvider
             return $this->_getCanceledPaymentUrl($order);
         }
 
-        $redirectPage = $this->_isCheckoutOrder($orderId) ? 'checkout_process.php' : 'checkout_success.php';
+        if (!$this->_isCheckoutOrder($orderId)) {
+            return UrlProvider::generateShopUrl('checkout_success.php');
+        }
 
-        return UrlProvider::generateShopUrl($redirectPage);
+        $_SESSION[static::SESSION_RETURNED_ORDER] = $orderId;
+
+        return UrlProvider::generateShopUrl('checkout_process.php');
+    }
+
+    /**
+     * Checks whether the customer returned from Mollie for the given order, so its checkout may be finished.
+     * The mark is consumed, so a later submit of the checkout for the same order is not treated as a return.
+     *
+     * @param int $orderId
+     *
+     * @return bool
+     */
+    public static function consumeReturnedOrder($orderId)
+    {
+        $isReturned = isset($_SESSION[static::SESSION_RETURNED_ORDER])
+            && (int)$_SESSION[static::SESSION_RETURNED_ORDER] === (int)$orderId;
+        unset($_SESSION[static::SESSION_RETURNED_ORDER]);
+
+        return $isReturned;
+    }
+
+    /**
+     * Returns the URL where the customer continues the payment of the order: the Mollie checkout while the
+     * payment can still be paid, otherwise the return URL, which decides by the payment status
+     *
+     * @param int $orderId
+     *
+     * @return string
+     */
+    public function getPaymentContinuationUrl($orderId)
+    {
+        $checkoutUrl = $this->_getCheckoutUrl($orderId);
+        if ($checkoutUrl) {
+            return $checkoutUrl;
+        }
+
+        return UrlProvider::generateShopUrl('shop.php', 'MollieCheckoutRedirect', ['order_id' => (int)$orderId]);
+    }
+
+    /**
+     * @param int $orderId
+     *
+     * @return string Mollie checkout URL of the order payment, or an empty string if the payment has none
+     */
+    private function _getCheckoutUrl($orderId)
+    {
+        /** @var OrderReferenceService $orderReferenceService */
+        $orderReferenceService = ServiceRegister::getService(OrderReferenceService::CLASS_NAME);
+        $orderReference = $orderReferenceService->getByShopReference((string)$orderId);
+        if ($orderReference === null || $orderReference->getApiMethod() !== PaymentMethodConfig::API_METHOD_PAYMENT) {
+            return '';
+        }
+
+        $checkoutLink = Payment::fromArray((array)$orderReference->getPayload())->getLink('checkout');
+
+        return $checkoutLink ? $checkoutLink->getHref() : '';
     }
 
     /**
