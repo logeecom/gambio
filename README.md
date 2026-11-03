@@ -50,6 +50,7 @@ Read more about the integration configuration on [our Wiki](https://github.com/m
 - Add the Pay by Bank payment method
 - Check the payment status when the customer returns from Mollie: canceled, failed and expired payments lead back to the payment selection instead of the checkout success page
 - Restore the stock exactly once for canceled, failed and expired payments
+- Fixed finishing the checkout on a repeated order submit
 
 *3.1.5*
 - Guard constant lookups with defined()
