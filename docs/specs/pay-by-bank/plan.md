@@ -10,7 +10,7 @@ new "Pending (Mollie)" status while the payment is pending. Realizes `docs/specs
 
 - **Prerequisite:** core release 1.3.12 (`PaymentMethods::PayByBank`, `PendingOrderTransitionService`,
   `pending` in `StatusWebHookHandler`).
-- **Target branch:** `4.5-5.x`. Port to `4.1-4.4`: not decided (spec, open decisions).
+- **Target branch:** `4.5-5.x`, ported to `4.1-4.4` in release 2.1.5 (`spec.md` § Port to `4.1-4.4`).
 - **Out of scope:** pending handling for other methods, refund/capture changes.
 
 ## 2. Decisions

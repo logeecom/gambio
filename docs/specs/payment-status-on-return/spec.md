@@ -28,7 +28,6 @@ uses the same code path as the webhook and is serialized with it.
 - Payment links (`MolliePaymentLinkRedirect`) and admin status changes.
 - The product-stock defect in `RestockService` (pre-existing, found during testing; see § Known
   pre-existing defect, tracked in a separate ticket).
-- Porting to `4.1-4.4` (*unconfirmed*, see open decisions).
 
 ## Acceptance criteria
 
@@ -56,11 +55,14 @@ uses the same code path as the webhook and is serialized with it.
 | The checkout is finished only for the order of the current checkout (`$_SESSION['tmp_oID']`) | A return for an old order must not finish the current checkout |
 | Comments in `DEFAULT_LANGUAGE` | Comments are written from the webhook too, where there is no session language |
 
+## Port to `4.1-4.4`
+
+Ported in release 2.1.5 on branch `feature/CS-8633` (`f89a9cc`, `8e03d83`, `52ea8b4`), with the
+branch specifics from `CLAUDE.md` § Supported branches. Not yet verified on a GX 4.1–4.4 shop (`tasks.md` PSR-8).
+
 ## Open decisions
 
 - Fail-open on a failed sync (decision above) needs explicit confirmation.
-- Port to `4.1-4.4`: not decided. `4.1-4.4` has no `GambioConfigRepository::select/update`; the port
-  must use the branch specifics in `CLAUDE.md` § Supported branches.
 
 ## Open risks
 

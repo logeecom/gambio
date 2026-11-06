@@ -11,7 +11,7 @@ Realizes `docs/specs/repeated-order-submit/spec.md`.
 
 - **Prerequisite:** `docs/specs/payment-status-on-return/` (the return decides by the synced status
   and sends only the current checkout order to `checkout_process.php`).
-- **Target branch:** `4.5-5.x`. Port to `4.1-4.4`: not decided.
+- **Target branch:** `4.5-5.x`, ported to `4.1-4.4` in release 2.1.5 (`spec.md` § Port to `4.1-4.4`).
 - **Out of scope:** Gambio/theme changes, non-locking session handlers.
 
 ## 2. Decisions

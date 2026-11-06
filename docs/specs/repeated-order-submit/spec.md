@@ -21,7 +21,6 @@ payment.
 
 - Changing Gambio's checkout or theme (button disabling).
 - Shops whose session handler does not serialize requests of one session.
-- Porting to `4.1-4.4` (*unconfirmed*, see open decisions).
 
 ## Acceptance criteria
 
@@ -41,9 +40,15 @@ payment.
 | A repeated submit redirects to the Mollie checkout link stored with the payment (`OrderReference` payload) | The shopper continues the same payment; no second payment is created |
 | Without a stored checkout link, redirect to `MollieCheckoutRedirect` for the order | Lets the return logic decide by the payment status (for example a paid card payment without a checkout link) |
 
+## Port to `4.1-4.4`
+
+Ported in release 2.1.5 on branch `feature/CS-8633` (`39ad983`; README note in `52ea8b4`). Not yet verified on a GX 4.1–4.4 shop; the
+guard relies on Gambio calling `before_process()` before the `tmp_oID` check, which is still to be
+confirmed for GX 4.1–4.4 (`tasks.md` ROS-9).
+
 ## Open decisions
 
-- Port to `4.1-4.4`: not decided.
+None beyond the open tasks (`tasks.md` ROS-5).
 
 ## Open risks
 

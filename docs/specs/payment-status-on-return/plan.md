@@ -10,7 +10,7 @@ webhook code path, serialized with the webhook) before deciding where the shoppe
 failed and expired payments lead back to payment selection; restock happens exactly once in the
 cancel transition. Realizes `docs/specs/payment-status-on-return/spec.md`.
 
-- **Target branch:** `4.5-5.x`. Port to `4.1-4.4`: not decided.
+- **Target branch:** `4.5-5.x`, ported to `4.1-4.4` in release 2.1.5 (`spec.md` § Port to `4.1-4.4`).
 - **Out of scope:** payment links, `RestockService` product-stock logic, admin status changes.
 - **Related:** `docs/specs/repeated-order-submit/` later adds a "returned order" session mark to the
   `checkout_process.php` branch of this flow.

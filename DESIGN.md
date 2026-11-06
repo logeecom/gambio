@@ -5,7 +5,7 @@ this file (including diagrams) in the same pass.
 
 ## 1. Purpose
 
-This module lets a Gambio GX 4.5.x–5.0.x shop take payments through Mollie. It exposes 23 Mollie payment methods (including Pay by Bank) as Gambio payment modules (`includes/modules/payment/mollie_*.php`), plus one optional surcharge order-total module (`ot_mollie`). A Module Center module handles API-key connection, order-status mapping and notifications. Order-detail extenders add a Mollie dashboard with refund, capture and payment-link actions. Payment state comes back through a shop webhook and a checkout redirect controller. Business logic (API proxy, payment/order services, webhook dispatch, ORM, notifications, surcharge, version check) lives in the vendored `mollie/integration-core` library. This module is the Gambio wrapper that implements the core's integration interfaces and maps Gambio orders to Mollie DTOs.
+This module lets a Gambio GX 4.5.x–5.0.x shop take payments through Mollie. It exposes 23 Mollie payment methods as Gambio payment modules (`includes/modules/payment/mollie_*.php`), plus one optional surcharge order-total module (`ot_mollie`). A Module Center module handles API-key connection, order-status mapping and notifications. Order-detail extenders add a Mollie dashboard with refund, capture and payment-link actions. Payment state comes back through a shop webhook and a checkout redirect controller. Business logic (API proxy, payment/order services, webhook dispatch, ORM, notifications, surcharge, version check) lives in the vendored `mollie/integration-core` library. This module is the Gambio wrapper that implements the core's integration interfaces and maps Gambio orders to Mollie DTOs.
 
 ## 2. Architecture overview
 
@@ -569,8 +569,9 @@ sequenceDiagram
   - `Mollie_AdminApplicationTopExtender::proceed(): void`.
   - Languages are de/en/fr/nl only.
   - `VERSION_CHECK_URL` and the CodeQL workflow point at `4.1-4.4`.
-  - The vendored core is labelled 1.3.10 and its files differ from this branch, which vendors core 1.3.12 unchanged (`ProxyDataProvider`, `PaymentMethodConfig`, and everything added in 1.3.11–1.3.12).
-  - Pay by Bank, the pending status, the status sync on return and the repeated-submit guard (release 3.1.6) exist only on this branch until they are ported.
+  - `OrderStatusUpdate` lives in `Update\v2_1_5` and, because `GambioConfigRepository` has no `select/update` there, reads the status map with `getByKey()` and writes it with `updateValue()`.
+  - The vendored core is the same as on this branch: 1.3.12, identical to core commit `84a4bc9`. It is still installed with Composer on each branch, never copied.
+  - Pay by Bank, the pending status, the status sync on return and the repeated-submit guard are in release 3.1.6 on this branch and in release 2.1.5 on `4.1-4.4`.
 - **Vendored core.** `vendor/` is committed. `mollie/integration-core` comes from a private VCS repo (`git@github.com:mollie/orocore.git`), so `composer install` needs access to it. The core is never edited in place.
 - **Single store.** `getCurrentSystemId()` returns `'1'`; there is no store scoping.
 - **Manual verification.** There is no automated test suite or quality gate. Changes are verified on a Gambio install (copy files, clear the module/output/text cache, install via Module Center).

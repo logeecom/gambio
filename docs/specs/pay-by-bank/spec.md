@@ -21,7 +21,6 @@ Bank in checkout like any other Mollie method, and make a pending payment visibl
 
 - Pending handling for any method other than Pay by Bank.
 - Changes to refund or capture (Pay by Bank is not capturable).
-- Porting to `4.1-4.4` (*unconfirmed*, see open decisions).
 
 ## Acceptance criteria
 
@@ -48,10 +47,21 @@ Bank in checkout like any other Mollie method, and make a pending payment visibl
 | Saved mappings without `mollie_pending` fall back to the default, and to `mollie_created` while the status does not exist | Backward compatibility for in-place upgrades (`PRINCIPLES.md` §5.10) |
 | Status names are written for every shop language, English as fallback | Fixes install writing other languages to language ID 1 |
 
+## Port to `4.1-4.4`
+
+Ported in release 2.1.5 on branch `feature/CS-8633` (`4e5dbfa`, `1a126df`, `52ea8b4`), with the
+branch specifics from `CLAUDE.md` § Supported branches:
+
+- Core 1.3.12 is installed on that branch too; its vendor is identical to core `84a4bc9`.
+- `OrderStatusUpdate` is in `Update\v2_1_5` and uses `GambioConfigRepository::getByKey()` and a new
+  `updateValue()`, because `4.1-4.4` has no `select/update`.
+- Languages de, en, fr, nl only.
+
+Not yet verified on a GX 4.1–4.4 shop (`tasks.md` PBB-11).
+
 ## Open decisions
 
-- Port to `4.1-4.4`: not decided. The `4.1-4.4` vendored core is still labelled 1.3.10 and differs
-  from both `4.5-5.x` and the core repo, so a port starts with a core update on that branch.
+None.
 
 ## Open risks
 

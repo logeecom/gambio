@@ -29,9 +29,9 @@ ported (`PRINCIPLES.md` §7).
 | Storefront/admin languages | de, en, fr, nl, it, es | de, en, fr, nl (no `lang/italian`, `lang/spanish`, `Admin/TextPhrases/{italian,spanish}`) |
 | `gx_configurations` inserts | `key`, `value`, `type`, `sort_order` | additionally `legacy_group_id = 6` (`mollie::install`, `ot_mollie::install`, `PaymentMethodUpdate`, `mollie_issuer_providable`) |
 | Constant lookups | `mollie::_getConstantValue()` (`defined()` guard) | direct `@constant(...)`; there is no `_getConstantValue()` |
-| Config-field updater | `PaymentMethodUpdate::upsertConfigFields()`, which also updates the SORT_ORDER type; `GambioConfigRepository::update/select` | `PaymentMethodUpdate::addConfigFields()`, with no type update and no `update/select` |
+| Config-field updater | `PaymentMethodUpdate::upsertConfigFields()`, which also updates the SORT_ORDER type; `GambioConfigRepository::update/select` | `PaymentMethodUpdate::addConfigFields()`, with no type update and no `update/select`; `OrderStatusUpdate` (`Update\v2_1_5`) uses `getByKey()` + `updateValue()` |
 | Overload signatures | `Mollie_AdminApplicationTopExtender::proceed()` | `proceed(): void` |
-| Vendored core (`vendor/mollie/integration-core`) | lock `1.3.10` | lock `1.3.10`; the files differ from `4.5-5.x` (`ProxyDataProvider`, `PaymentMethodConfig`). **Never copy `vendor/` between branches.** |
+| Vendored core (`vendor/mollie/integration-core`) | lock `1.3.12` (identical to core commit `84a4bc9`) | lock `1.3.12`, same files as `4.5-5.x`. **Never copy `vendor/` between branches**; install it with Composer on each branch. |
 
 ## Architecture map
 
